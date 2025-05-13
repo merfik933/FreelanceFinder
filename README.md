@@ -1,4 +1,3 @@
-
 # FreelanceFinder
 
 FreelanceFinder is a service that quickly notifies users about new projects from various freelance platforms, with filtering and other useful features.
@@ -16,4 +15,7 @@ All dependencies are specified in the `requirements.txt` file.
 
 To ensure correct operation, the following environment variables must be set:
 
-* `FREELANCEHUNT_TOKEN` – Token for accessing the FreelanceHunt API. Instructions on how to obtain it can be found in the official documentation: `https://apidocs.freelancehunt.com`
+* `FREELANCEHUNT_TOKEN` – Token for accessing the FreelanceHunt API.
+  Instructions on how to obtain it can be found in the official documentation: `https://apidocs.freelancehunt.com`
+* `TELEGRAM_TOKEN` – Token used to access the Telegram Bot API.
+  You must create a new bot via [BotFather](https://t.me/BotFather), the official Telegram bot for creating and managing bots, to obtain this token.
