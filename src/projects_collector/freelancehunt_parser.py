@@ -38,13 +38,13 @@ class FreelanceHuntParser(BaseParser):
             print(f"Error fetching projects: {response.status_code}")
             return []
         
-    def _format_project(self, p: dict) -> dict:
-        attrs = p["attributes"]
+    def _format_project(self, project: dict) -> dict:
+        attrs = project["attributes"]
         return {
-            "id": p["id"],
+            "id": project["id"],
             "title": attrs["name"],
             "description": attrs["description"],
-            "url": p["links"]["self"]["web"],
+            "url": project["links"]["self"]["web"],
             "skills": [s["name"] for s in attrs.get("skills", [])],
             "budget": {
                 "amount": attrs.get("budget")["amount"] if attrs.get("budget") else None,
