@@ -1,4 +1,5 @@
 import telebot
+from datetime import datetime
 
 class TelegramBot:
     def __init__(self, token, admin_id):
@@ -26,7 +27,7 @@ class TelegramBot:
         
     def format_project_message(self, project: dict) -> str:
         title = f"<b>{project['title']}</b>"
-        url = f"\n🔗 <a href=\"{project['url']}\">Відкрити проект</a>"
+        url = f"\n🔗{project['url']}"
         description = project.get('description') or ""
         if len(description) > self.MAX_DESCRIPTION_LENGTH:
             description = description[:self.MAX_DESCRIPTION_LENGTH] + "…"
@@ -35,7 +36,12 @@ class TelegramBot:
         budget = ""
         if project.get('budget') and project['budget'].get('amount'):
             budget = f"\n💰 {project['budget']['amount']} {project['budget']['currency']}"
-        published = f"\n🕒 {project.get('published_at', '')}"
+        published_at = project.get('published_at', '')
+        try:
+            dt = datetime.fromisoformat(published_at)
+            published = f"\n🕒 {dt.strftime('%H:%M %d.%m.%Y')}"
+        except Exception:
+            published = f"\n🕒 {published_at}"
         source = f"\n🌐 {project.get('source', '')}"
 
         message = f"{title}{url}{description}{skills}{budget}{published}{source}"
