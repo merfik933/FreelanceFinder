@@ -13,17 +13,17 @@ class ParserWorker(threading.Thread):
             try:
                 new_projects = self.parser.fetch_new_projects()
                 if new_projects:
-                    self.callback(new_projects)
+                    for project in new_projects:
+                        self.callback(project)
             except Exception as e:
                 print(f"Error in parser worker: {e}")
-
+                
             time.sleep(self.interval)
-            print(f"Sleeping for {self.interval} seconds...")
 
 class Collector:
-    def __init__(self, parsers: list, on_new_projects: callable):
+    def __init__(self, parsers: list, on_new_project: callable):
         self.parsers = parsers
-        self.callback = on_new_projects
+        self.callback = on_new_project
 
     def run(self):
         for parser in self.parsers:
