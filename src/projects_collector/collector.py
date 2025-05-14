@@ -17,7 +17,7 @@ class ParserWorker(threading.Thread):
                         self.callback(project)
             except Exception as e:
                 print(f"Error in parser worker: {e}")
-                
+
             time.sleep(self.interval)
 
 class Collector:
@@ -29,8 +29,4 @@ class Collector:
         for parser in self.parsers:
             worker = ParserWorker(parser, self.callback)
             worker.start()
-
-        # Keep the main thread alive
-        while True:
-            time.sleep(10)
                 
