@@ -35,7 +35,8 @@ class TelegramBot:
         if len(description) > self.MAX_DESCRIPTION_LENGTH:
             description = description[:self.MAX_DESCRIPTION_LENGTH] + "…"
         description = f"\n\n{description}"
-        skills = f"\n\n🛠️ Навички: {', '.join(project.get('skills', []))}" if project.get('skills') else ""
+        skills_list = [skill.get('name', '') for skill in project.get('skills', [])]
+        skills = f"\n\n🛠️ Навички: {', '.join(skills_list)}" if skills_list else ""
         budget = ""
         if project.get('budget') and project['budget'].get('amount'):
             budget = f"\n💰 {project['budget']['amount']} {project['budget']['currency']}"

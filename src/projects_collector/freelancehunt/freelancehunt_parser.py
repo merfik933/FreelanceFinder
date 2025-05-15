@@ -50,7 +50,7 @@ class FreelanceHuntParser(BaseParser):
             "title": attrs["name"],
             "description": attrs["description"],
             "url": project["links"]["self"]["web"],
-            "skills": [s["name"] for s in attrs.get("skills", [])],
+            "skills": attrs.get("skills", []),
             "budget": {
                 "amount": attrs.get("budget")["amount"] if attrs.get("budget") else None,
                 "currency": attrs.get("budget")["currency"] if attrs.get("budget") else None,
