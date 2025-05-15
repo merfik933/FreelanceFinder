@@ -2,6 +2,7 @@ import requests
 import json
 
 from .base_parser import BaseParser
+from pathlib import Path
 
 class FreelanceHuntParser(BaseParser):
     def __init__(self, token: str):
@@ -13,11 +14,14 @@ class FreelanceHuntParser(BaseParser):
         }
         self.requests_interval = 5  # seconds
 
-        try:
-            with open("src\\state\\freelancehunt_state.json", "r") as f:
+        self.STATE_PATH = Path(__file__).parent / "state" / "freelancehunt_state.json"
+        self.STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+        if self.STATE_PATH.exists():
+            with open(self.STATE_PATH, "r") as f:
                 state = json.load(f)
                 self.last_project_id = state.get("last_project_id", 0)
-        except FileNotFoundError:
+        else:
             self.last_project_id = 0
         
 
@@ -28,8 +32,7 @@ class FreelanceHuntParser(BaseParser):
             new_projects = [p for p in projects if p["id"] > self.last_project_id]
             if new_projects:
                 self.last_project_id = max(p["id"] for p in new_projects)
-                with open("src\\state\\freelancehunt_state.json", "w") as f:
-                    json.dump({"last_project_id": self.last_project_id}, f)
+                self._save_state()
 
                 new_projects = [self._format_project(p) for p in new_projects]
                 new_projects.reverse()
@@ -38,6 +41,11 @@ class FreelanceHuntParser(BaseParser):
         else:
             print(f"Error fetching projects: {response.status_code}")
             return []
+        
+    def _save_state(self):
+        state = {"last_project_id": self.last_project_id}
+        with open(self.STATE_PATH, "w") as f:
+            json.dump(state, f)
         
     def _format_project(self, project: dict) -> dict:
         attrs = project["attributes"]
