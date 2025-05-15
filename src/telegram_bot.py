@@ -23,7 +23,10 @@ class TelegramBot:
 
     def send_projects(self, project):
         message = self.format_project_message(project)
-        self.bot.send_message(self.admin_id, message, parse_mode='HTML', disable_web_page_preview=True)
+        try: 
+            self.bot.send_message(self.admin_id, message, parse_mode='HTML', disable_web_page_preview=True)
+        except Exception as e:
+            print(f"Error sending message: {e}")
         
     def format_project_message(self, project: dict) -> str:
         title = f"<b>{project['title']}</b>"
