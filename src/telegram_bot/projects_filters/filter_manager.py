@@ -19,14 +19,15 @@ class FilterManager:
     def _load_filters(self):
         if FILTERS_PATH.exists():
             with open(FILTERS_PATH, "r", encoding="utf-8") as f:
-                self.filters = json.load(f)
+                filters = json.load(f)
         else:
             print("Filters file not found. Creating default filters.")
-            self.filters = {
+            filters = {
                 "mode": FilterMode.ALL,
                 "skills": [],
             }
-            self._save_filters()
+
+        return filters
 
     def _save_filters(self):
         with open(FILTERS_PATH, "w", encoding="utf-8") as f:
@@ -35,10 +36,12 @@ class FilterManager:
     def _load_skills(self):
         if SKILLS_PATH.exists():
             with open(SKILLS_PATH, "r", encoding="utf-8") as f:
-                self.skills = json.load(f)
+                skills = json.load(f)
         else:
             print("Skills file not found. Creating empty skills list.")
-            self.skills = {}
+            skills = {}
+
+        return skills
 
     def get_filter_mode(self):
         return self.filters["mode"]
