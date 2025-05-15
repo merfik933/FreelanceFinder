@@ -12,6 +12,10 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID"))
 FREELANCEHUNT_TOKEN = os.getenv("FREELANCEHUNT_TOKEN")
 
+assert TELEGRAM_TOKEN, "Missing TELEGRAM_TOKEN in .env"
+assert ADMIN_CHAT_ID, "Missing ADMIN_CHAT_ID in .env"
+assert FREELANCEHUNT_TOKEN, "Missing FREELANCEHUNT_TOKEN in .env"
+
 if __name__ == "__main__":
     bot = TelegramBot(TELEGRAM_TOKEN, ADMIN_CHAT_ID)
     fh_parser = FreelanceHuntParser(FREELANCEHUNT_TOKEN)
