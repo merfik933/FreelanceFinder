@@ -7,5 +7,5 @@
 # Python cache
 __pycache__/
 
-# State files
-state
+# Auxiliary files for parsers
+last_project_id.txt

@@ -1,7 +1,6 @@
 import requests
-import json
 
-from .base_parser import BaseParser
+from ..base_parser import BaseParser
 from pathlib import Path
 
 class FreelanceHuntParser(BaseParser):
@@ -14,13 +13,10 @@ class FreelanceHuntParser(BaseParser):
         }
         self.requests_interval = 5  # seconds
 
-        self.STATE_PATH = Path(__file__).parent / "state" / "freelancehunt_state.json"
-        self.STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-        if self.STATE_PATH.exists():
-            with open(self.STATE_PATH, "r") as f:
-                state = json.load(f)
-                self.last_project_id = state.get("last_project_id", 0)
+        self.LAST_PROJECT_ID_PATH = Path(__file__).parent / "last_project_id.txt"
+        if self.LAST_PROJECT_ID_PATH.exists():
+            with open(self.LAST_PROJECT_ID_PATH, "r") as f:
+                self.last_project_id = int(f.read().strip())
         else:
             self.last_project_id = 0
         
@@ -43,9 +39,8 @@ class FreelanceHuntParser(BaseParser):
             return []
         
     def _save_state(self):
-        state = {"last_project_id": self.last_project_id}
-        with open(self.STATE_PATH, "w") as f:
-            json.dump(state, f)
+        with open(self.LAST_PROJECT_ID_PATH, "w") as f:
+            f.write(str(self.last_project_id))
         
     def _format_project(self, project: dict) -> dict:
         attrs = project["attributes"]
