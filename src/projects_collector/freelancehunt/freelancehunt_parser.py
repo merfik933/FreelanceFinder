@@ -3,6 +3,8 @@ import requests
 from ..base_parser import BaseParser
 from pathlib import Path
 
+LAST_PROJECT_ID_PATH = Path(__file__).parent / "last_project_id.txt"
+
 class FreelanceHuntParser(BaseParser):
     def __init__(self, token: str):
         self.token = token
@@ -13,9 +15,8 @@ class FreelanceHuntParser(BaseParser):
         }
         self.requests_interval = 5  # seconds
 
-        self.LAST_PROJECT_ID_PATH = Path(__file__).parent / "last_project_id.txt"
-        if self.LAST_PROJECT_ID_PATH.exists():
-            with open(self.LAST_PROJECT_ID_PATH, "r") as f:
+        if LAST_PROJECT_ID_PATH.exists():
+            with open(LAST_PROJECT_ID_PATH, "r") as f:
                 self.last_project_id = int(f.read().strip())
         else:
             self.last_project_id = 0
@@ -39,7 +40,7 @@ class FreelanceHuntParser(BaseParser):
             return []
         
     def _save_state(self):
-        with open(self.LAST_PROJECT_ID_PATH, "w") as f:
+        with open(LAST_PROJECT_ID_PATH, "w") as f:
             f.write(str(self.last_project_id))
         
     def _format_project(self, project: dict) -> dict:
