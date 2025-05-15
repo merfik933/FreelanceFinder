@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 from projects_collector.freelancehunt_parser import FreelanceHuntParser
 from projects_collector.collector import Collector
-from telegram_bot import TelegramBot
+from telegram_bot.bot import TelegramBot
 
 load_dotenv()
 
