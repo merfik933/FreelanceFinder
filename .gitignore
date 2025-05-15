@@ -9,3 +9,6 @@ __pycache__/
 
 # Auxiliary files for parsers
 last_project_id.txt
+
+# User settings
+filters.json
