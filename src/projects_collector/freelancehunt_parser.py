@@ -32,7 +32,8 @@ class FreelanceHuntParser(BaseParser):
                     json.dump({"last_project_id": self.last_project_id}, f)
 
                 new_projects = [self._format_project(p) for p in new_projects]
-
+                new_projects.reverse()
+                
             return new_projects
         else:
             print(f"Error fetching projects: {response.status_code}")
