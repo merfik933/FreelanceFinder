@@ -122,25 +122,24 @@ class TelegramBot:
         
     def format_project_message(self, project: dict) -> str:
         title = f"<b>{project['title']}</b>"
-        url = f"\n🔗{project['url']}"
+        skills_list = [skill.get('name', '') for skill in project.get('skills', [])]
+        skills = f"\n🛠️ Навички: {', '.join(skills_list)}" if skills_list else ""
+        budget = ""
+        if project.get('budget') and project['budget'].get('amount'):
+            budget = f"\n💰 {project['budget']['amount']} {project['budget']['currency']}"
         description = project.get('description') or ""
         if len(description) > self.MAX_DESCRIPTION_LENGTH:
             description = description[:self.MAX_DESCRIPTION_LENGTH] + "…"
         description = f"\n\n{description}"
-        skills_list = [skill.get('name', '') for skill in project.get('skills', [])]
-        skills = f"\n\n🛠️ Навички: {', '.join(skills_list)}" if skills_list else ""
-        budget = ""
-        if project.get('budget') and project['budget'].get('amount'):
-            budget = f"\n💰 {project['budget']['amount']} {project['budget']['currency']}"
         published_at = project.get('published_at', '')
         try:
             dt = datetime.fromisoformat(published_at)
-            published = f"\n🕒 {dt.strftime('%H:%M %d.%m.%Y')}"
+            published = f"\n\n🕒 {dt.strftime('%H:%M %d.%m.%Y')}"
         except Exception:
-            published = f"\n🕒 {published_at}"
-        source = f"\n🌐 {project.get('source', '')}"
+            published = f"\n\n🕒 {published_at}"
+        url = f"\n🔗{project['url']}"
 
-        message = f"{title}{url}{description}{skills}{budget}{published}{source}"
+        message = f"{title}{skills}{budget}{description}{published}{url}"
 
         if len(message) > self.MAX_MESSAGE_LENGTH:
             message = message[:self.MAX_MESSAGE_LENGTH] + "…"
