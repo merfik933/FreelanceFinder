@@ -9,7 +9,6 @@ class FilterMode(str, Enum):
     ALL = "all"
     WHITELIST = "whitelist"
     BLACKLIST = "blacklist"
-    DISABLED = "disabled"
 
 class FilterManager:
     def __init__(self):
@@ -73,8 +72,6 @@ class FilterManager:
 
         if mode == FilterMode.ALL:
             return True
-        elif mode == FilterMode.DISABLED:
-            return False
         elif mode == FilterMode.WHITELIST:
             return bool(project_skill_ids & selected_skills)
         elif mode == FilterMode.BLACKLIST:

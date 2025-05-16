@@ -149,7 +149,6 @@ class TelegramBot:
             "all": "Усі проєкти",
             "whitelist": "Лише вибрані",
             "blacklist": "Усі, крім вибраних",
-            "disabled": "Фільтрація вимкнена"
         }.get(mode, mode)
 
         markup = telebot.types.InlineKeyboardMarkup()
