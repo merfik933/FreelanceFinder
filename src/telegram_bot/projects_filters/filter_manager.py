@@ -77,7 +77,3 @@ class FilterManager:
         elif mode == FilterMode.BLACKLIST:
             return not bool(project_skill_ids & selected_skills)
 
-    def get_skill_name(self, skill_id: int) -> str:
-        return self.skills.get(skill_id, f"[{skill_id}]")
-        
-    
