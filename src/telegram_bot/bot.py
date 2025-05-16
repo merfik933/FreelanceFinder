@@ -110,6 +110,9 @@ class TelegramBot:
             edit_skills_handler(call)
 
     def send_projects(self, project):
+        if self.filter_manager.is_project_allowed(project) == False:
+            return
+        
         message = self.format_project_message(project)
         try: 
             self.bot.send_message(self.admin_id, message, parse_mode='HTML', disable_web_page_preview=True)
