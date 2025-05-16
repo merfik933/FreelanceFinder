@@ -11,6 +11,7 @@ class FreelanceHuntParser(BaseParser):
         self.url = "https://api.freelancehunt.com/v2/projects"
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+            "Accept-Language": "uk",
             "Authorization": f"Bearer {self.token}"
         }
         self.requests_interval = 5  # seconds
