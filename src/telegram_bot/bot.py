@@ -1,5 +1,6 @@
 import telebot
 from datetime import datetime
+import time
 
 from .projects_filters.filter_manager import FilterManager
 
@@ -160,8 +161,11 @@ class TelegramBot:
         markup.add(telebot.types.InlineKeyboardButton("❌ Вийти", callback_data="delete_message"))
 
         return markup
-
     
     def run(self):
-        self.bot.polling(none_stop=True)
+        while True:
+            try:
+                self.bot.polling(none_stop=True, interval=0)
+            except Exception as e:
+                time.sleep(5)
         
