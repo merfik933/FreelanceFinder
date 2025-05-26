@@ -123,7 +123,7 @@ class TelegramBot:
     def format_project_message(self, project: dict) -> str:
         title = f"<b>{project['title']}</b>"
         skills_list = [skill.get('name', '') for skill in project.get('skills', [])]
-        skills = f"\n🛠️ Навички: {', '.join(skills_list)}" if skills_list else ""
+        skills = f"\n🛠️: {', '.join(skills_list)}" if skills_list else ""
         budget = ""
         if project.get('budget') and project['budget'].get('amount'):
             budget = f"\n💰 {project['budget']['amount']} {project['budget']['currency']}"
