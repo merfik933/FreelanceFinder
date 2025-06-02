@@ -25,3 +25,5 @@ To ensure correct operation, the following environment variables must be set:
   You must create a new bot via [BotFather](https://t.me/BotFather), the official Telegram bot for creating and managing bots, to obtain this token.
 * `ADMIN_CHAT_ID` - Admin chat id.
   To get your chat id, you can start the bot and enter the /id command
+
+License: This project is proprietary. See LICENSE for details.
