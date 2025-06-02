@@ -2,6 +2,10 @@
 
 FreelanceFinder is a service that quickly notifies users about new projects from various freelance platforms, with filtering and other useful features.
 
+⚠️ This is a protected project. The code is published for portfolio and educational purposes only.  
+Any usage, reproduction, or modification without explicit permission from the author is prohibited.  
+For inquiries or collaboration, contact anatoliy9370@gmail.com.
+
 ## Key features
 
 - Available via Telegram Bot
