@@ -19,3 +19,5 @@ To ensure correct operation, the following environment variables must be set:
   Instructions on how to obtain it can be found in the official documentation: `https://apidocs.freelancehunt.com`
 * `TELEGRAM_TOKEN` – Token used to access the Telegram Bot API.
   You must create a new bot via [BotFather](https://t.me/BotFather), the official Telegram bot for creating and managing bots, to obtain this token.
+* `ADMIN_CHAT_ID` – id of the admin's chat with the bot.id чату адміна з ботом
+  To obtain, use the command /id
