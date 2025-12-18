@@ -12,3 +12,6 @@ last_project_id.txt
 
 # User settings
 filters.json
+
+# Log files
+*.log
