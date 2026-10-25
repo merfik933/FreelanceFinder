@@ -15,6 +15,8 @@ class ParserWorker(threading.Thread):
                 if new_projects:
                     for project in new_projects:
                         self.callback(project)
+                        if hasattr(self.parser, "acknowledge_project"):
+                            self.parser.acknowledge_project(project)
             except Exception as e:
                 print(f"Error in parser worker: {e}")
 
@@ -29,4 +31,4 @@ class Collector:
         for parser in self.parsers:
             worker = ParserWorker(parser, self.callback)
             worker.start()
-                
+
