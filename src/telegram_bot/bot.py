@@ -41,6 +41,12 @@ class TelegramBot:
         def delete_message_handler(call):
             self.bot.delete_message(call.message.chat.id, call.message.message_id)
 
+        @self.bot.callback_query_handler(func=lambda call: call.data == "save_project")
+        def save_project_handler(call):
+            with open("saved_projects", "a", encoding="utf-8") as file:
+                file.write(f"{call.message.text or ''}\n{'-' * 40}\n")
+            self.bot.answer_callback_query(call.id, "Проєкт збережено")
+
         @self.bot.callback_query_handler(func=lambda call: call.data == "toggle_mode")
         def toggle_mode_handler(call):
             self.filter_manager.toggle_filter_mode()
@@ -116,7 +122,13 @@ class TelegramBot:
 
         message = self.format_project_message(project)
         try:
-            self.bot.send_message(self.admin_id, message, parse_mode='HTML', disable_web_page_preview=True)
+            self.bot.send_message(
+                self.admin_id,
+                message,
+                parse_mode='HTML',
+                disable_web_page_preview=True,
+                reply_markup=self.get_project_markup()
+            )
             time.sleep(1.1)
         except Exception as e:
             print(f"Error sending message: {e}")
@@ -147,6 +159,16 @@ class TelegramBot:
             message = message[:self.MAX_MESSAGE_LENGTH] + "…"
 
         return message
+
+    def get_project_markup(self):
+        markup = telebot.types.InlineKeyboardMarkup()
+        markup.add(
+            telebot.types.InlineKeyboardButton(
+                "🔖 Зберегти проєкт",
+                callback_data=f"save_project"
+            )
+        )
+        return markup
 
     def get_filter_settings_markup(self):
         mode = self.filter_manager.get_filter_mode()
