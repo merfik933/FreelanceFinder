@@ -18,10 +18,10 @@ class FreelanceHuntParser(BaseParser):
         }
         self.requests_interval = 5  # seconds
 
-        if LAST_PROJECT_ID_PATH.exists():
-            with open(LAST_PROJECT_ID_PATH, "r") as f:
-                self.last_project_id = int(f.read().strip())
-        else:
+        try:
+            saved_id = LAST_PROJECT_ID_PATH.read_text(encoding="utf-8-sig").strip()
+            self.last_project_id = max(0, int(saved_id))
+        except (FileNotFoundError, ValueError):
             self.last_project_id = 0
         
 
