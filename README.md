@@ -10,6 +10,7 @@ For inquiries or collaboration, contact anatoliy9370@gmail.com.
 
 - Available via Telegram Bot
 - Project filtering to avoid irrelevant notifications.
+- On startup, catches up on projects newer than the saved ID, up to three days old, using API pagination. Existing filters apply; the ID is saved after each successfully processed project. The first run also covers the last three days. Only projects still returned by the API can be recovered.
 
 ## Dependencies
 

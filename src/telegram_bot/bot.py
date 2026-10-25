@@ -14,7 +14,7 @@ class TelegramBot:
         self.MAX_DESCRIPTION_LENGTH = 2048
 
         self.filter_manager = FilterManager()
-        
+
         self._register_handlers()
 
     def _register_handlers(self):
@@ -24,7 +24,7 @@ class TelegramBot:
 
         @self.bot.message_handler(commands=['id'])
         def send_id(message):
-            self.bot.send_message(message.chat.id, f"Your ID: {message.chat.id}")    
+            self.bot.send_message(message.chat.id, f"Your ID: {message.chat.id}")
 
         @self.bot.message_handler(commands=['filters'])
         def filters_command(message):
@@ -32,8 +32,8 @@ class TelegramBot:
                 return
             filter_settings_markup = self.get_filter_settings_markup()
             self.bot.send_message(
-                message.chat.id, 
-                "Налаштування фільтрів", 
+                message.chat.id,
+                "Налаштування фільтрів",
                 reply_markup=filter_settings_markup
             )
 
@@ -113,13 +113,15 @@ class TelegramBot:
     def send_projects(self, project):
         if self.filter_manager.is_project_allowed(project) == False:
             return
-        
+
         message = self.format_project_message(project)
-        try: 
+        try:
             self.bot.send_message(self.admin_id, message, parse_mode='HTML', disable_web_page_preview=True)
+            time.sleep(1.1)
         except Exception as e:
             print(f"Error sending message: {e}")
-        
+            raise
+
     def format_project_message(self, project: dict) -> str:
         title = f"<b>{project['title']}</b>"
         skills_list = [skill.get('name', '') for skill in project.get('skills', [])]
@@ -145,7 +147,7 @@ class TelegramBot:
             message = message[:self.MAX_MESSAGE_LENGTH] + "…"
 
         return message
-    
+
     def get_filter_settings_markup(self):
         mode = self.filter_manager.get_filter_mode()
         mode_text = {
@@ -160,11 +162,11 @@ class TelegramBot:
         markup.add(telebot.types.InlineKeyboardButton("❌ Вийти", callback_data="delete_message"))
 
         return markup
-    
+
     def run(self):
         while True:
             try:
                 self.bot.polling(none_stop=True, interval=0)
             except Exception as e:
                 time.sleep(5)
-        
+

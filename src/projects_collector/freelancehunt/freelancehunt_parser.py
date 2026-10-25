@@ -2,6 +2,8 @@ import requests
 
 from ..base_parser import BaseParser
 from pathlib import Path
+from datetime import datetime, timedelta, timezone
+import time
 
 LAST_PROJECT_ID_PATH = Path(__file__).parent / "last_project_id.txt"
 
@@ -24,21 +26,31 @@ class FreelanceHuntParser(BaseParser):
         
 
     def fetch_new_projects(self) -> list[dict]:
-        response = requests.get(self.url, headers=self.headers)
-        if response.status_code == 200:
-            projects = response.json().get("data", [])
-            new_projects = [p for p in projects if p["id"] > self.last_project_id]
-            if new_projects:
-                self.last_project_id = max(p["id"] for p in new_projects)
-                self._save_state()
+        cutoff = datetime.now(timezone.utc) - timedelta(days=3)
+        url = self.url
+        new_projects = {}
+        while url:
+            response = requests.get(url, headers=self.headers, timeout=30)
+            response.raise_for_status()
+            payload = response.json()
+            projects = payload.get("data", [])
+            reached_boundary = False
+            for project in projects:
+                published = datetime.fromisoformat(project["attributes"]["published_at"])
+                if project["id"] <= self.last_project_id or published < cutoff:
+                    reached_boundary = True
+                    continue
+                new_projects[project["id"]] = project
+            if reached_boundary or not projects:
+                break
+            url = payload.get("links", {}).get("next")
+            if url:
+                time.sleep(self.requests_interval)
+        return [self._format_project(new_projects[key]) for key in sorted(new_projects)]
 
-                new_projects = [self._format_project(p) for p in new_projects]
-                new_projects.reverse()
-                
-            return new_projects
-        else:
-            print(f"Error fetching projects: {response.status_code}")
-            return []
+    def acknowledge_project(self, project: dict):
+        self.last_project_id = max(self.last_project_id, project["id"])
+        self._save_state()
         
     def _save_state(self):
         with open(LAST_PROJECT_ID_PATH, "w") as f:
