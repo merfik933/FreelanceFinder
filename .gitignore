@@ -21,3 +21,6 @@ filters.json
 
 # saved projects
 saved_projects
+
+# db
+*.db
