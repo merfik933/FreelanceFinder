@@ -24,3 +24,6 @@ saved_projects
 
 # db
 *.db
+
+# config
+config.ini
