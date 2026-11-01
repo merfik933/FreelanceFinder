@@ -1,6 +1,9 @@
 import telebot
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 import time
+
+from db import db
 
 from .projects_filters.filter_manager import FilterManager
 
@@ -116,7 +119,20 @@ class TelegramBot:
             self.bot.answer_callback_query(call.id, "Скинуто")
             edit_skills_handler(call)
 
-    def send_projects(self, project):
+    def send_projects(self, project_id):
+        project = db.get_record("projects", project_id)
+        if project is None:
+            raise ValueError(f"Project {project_id} not found in database")
+
+        skill_ids = {
+            relation["skill_id"]
+            for relation in db.get_records("project_skills", project_id=project_id)
+        }
+        project["skills"] = sorted(
+            (skill for skill in db.get_records("skills") if skill["id"] in skill_ids),
+            key=lambda skill: skill["name"],
+        )
+
         if self.filter_manager.is_project_allowed(project) == False:
             return
 
@@ -135,25 +151,25 @@ class TelegramBot:
             raise
 
     def format_project_message(self, project: dict) -> str:
-        title = f"<b>{project['title']}</b>"
+        name = f"<b>{project['name']}</b>"
         skills_list = [skill.get('name', '') for skill in project.get('skills', [])]
         skills = f"\n🛠️: {', '.join(skills_list)}" if skills_list else ""
         budget = ""
-        if project.get('budget') and project['budget'].get('amount'):
-            budget = f"\n💰 {project['budget']['amount']} {project['budget']['currency']}"
+        if project.get('budget_amount') is not None:
+            budget = f"\n💰 {project['budget_amount']} {project.get('budget_currency') or ''}"
         description = project.get('description') or ""
         if len(description) > self.MAX_DESCRIPTION_LENGTH:
             description = description[:self.MAX_DESCRIPTION_LENGTH] + "…"
         description = f"\n\n{description}"
         published_at = project.get('published_at', '')
         try:
-            dt = datetime.fromisoformat(published_at)
+            dt = datetime.fromtimestamp(published_at, timezone.utc).astimezone(ZoneInfo("Europe/Warsaw"))
             published = f"\n\n🕒 {dt.strftime('%H:%M %d.%m.%Y')}"
         except Exception:
             published = f"\n\n🕒 {published_at}"
         url = f"\n🔗{project['url']}"
 
-        message = f"{title}{skills}{budget}{description}{published}{url}"
+        message = f"{name}{skills}{budget}{description}{published}{url}"
 
         if len(message) > self.MAX_MESSAGE_LENGTH:
             message = message[:self.MAX_MESSAGE_LENGTH] + "…"
@@ -191,4 +207,3 @@ class TelegramBot:
                 self.bot.polling(none_stop=True, interval=0)
             except Exception as e:
                 time.sleep(5)
-

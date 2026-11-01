@@ -1,6 +1,8 @@
 import threading
 import time
 
+from db import db
+
 class ParserWorker(threading.Thread):
     def __init__(self, parser, callback):
         super().__init__(daemon=True)
@@ -11,14 +13,16 @@ class ParserWorker(threading.Thread):
     def run(self):
         while True:
             try:
+                print(f"{type(self.parser).__name__}: checking for new projects", flush=True)
                 new_projects = self.parser.fetch_new_projects()
                 if new_projects:
-                    for project in new_projects:
-                        self.callback(project)
-                        if hasattr(self.parser, "acknowledge_project"):
-                            self.parser.acknowledge_project(project)
+                    ids = db.add_records("projects", new_projects)
+                    print(f"Saved {len(ids)} projects to database", flush=True)
+
+                    for id in ids:
+                        self.callback(id)
             except Exception as e:
-                print(f"Error in parser worker: {e}")
+                print(f"Error in parser worker: {e}", flush=True)
 
             time.sleep(self.interval)
 

@@ -1,11 +1,11 @@
 import requests
 
 from ..base_parser import BaseParser
-from pathlib import Path
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 import time
 
-LAST_PROJECT_ID_PATH = Path(__file__).parent / "last_project_id.txt"
+from db import db
 
 class FreelanceHuntParser(BaseParser):
     def __init__(self, token: str):
@@ -16,58 +16,54 @@ class FreelanceHuntParser(BaseParser):
             "Accept-Language": "uk",
             "Authorization": f"Bearer {self.token}"
         }
-        self.requests_interval = 5  # seconds
-
-        try:
-            saved_id = LAST_PROJECT_ID_PATH.read_text(encoding="utf-8-sig").strip()
-            self.last_project_id = max(0, int(saved_id))
-        except (FileNotFoundError, ValueError):
-            self.last_project_id = 0
-        
+        self.requests_interval = 5
 
     def fetch_new_projects(self) -> list[dict]:
-        cutoff = datetime.now(timezone.utc) - timedelta(days=3)
+        last_project = db.get_record("projects", -1, source="freelancehunt")
+        last_project_id = last_project["external_id"] if last_project else 0
+        now = datetime.now(timezone.utc)
+        cutoff = (
+            now - timedelta(days=3) if last_project_id else
+            now.astimezone(ZoneInfo("Europe/Warsaw")).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+        )
+
         url = self.url
         new_projects = {}
+        page = 0
         while url:
             response = requests.get(url, headers=self.headers, timeout=30)
             response.raise_for_status()
             payload = response.json()
             projects = payload.get("data", [])
+            page += 1
             reached_boundary = False
             for project in projects:
+                project_id = int(project["id"])
                 published = datetime.fromisoformat(project["attributes"]["published_at"])
-                if project["id"] <= self.last_project_id or published < cutoff:
+                if project_id <= last_project_id or published < cutoff:
                     reached_boundary = True
                     continue
-                new_projects[project["id"]] = project
+                new_projects[project_id] = project
+            print(f"Freelancehunt: page {page}, collected {len(new_projects)} new projects", flush=True)
             if reached_boundary or not projects:
                 break
             url = payload.get("links", {}).get("next")
             if url:
                 time.sleep(self.requests_interval)
         return [self._format_project(new_projects[key]) for key in sorted(new_projects)]
-
-    def acknowledge_project(self, project: dict):
-        self.last_project_id = max(self.last_project_id, project["id"])
-        self._save_state()
-        
-    def _save_state(self):
-        with open(LAST_PROJECT_ID_PATH, "w") as f:
-            f.write(str(self.last_project_id))
         
     def _format_project(self, project: dict) -> dict:
         attrs = project["attributes"]
         return {
-            "id": project["id"],
-            "title": attrs["name"],
+            "external_id": project["id"],
+            "name": attrs["name"],
             "description": attrs["description"],
             "url": project["links"]["self"]["web"],
-            "skills": attrs.get("skills", []),
-            "budget": {
-                "amount": attrs.get("budget")["amount"] if attrs.get("budget") else None,
-                "currency": attrs.get("budget")["currency"] if attrs.get("budget") else None,
-            },
+            "project_skills": [skill["id"] for skill in attrs.get("skills", [])],
+            "budget_amount": attrs.get("budget")["amount"] if attrs.get("budget") else None,
+            "budget_currency": attrs.get("budget")["currency"] if attrs.get("budget") else None,
             "source": "freelancehunt",
-            "published_at": attrs["published_at"],
+            "published_at": int(datetime.fromisoformat(attrs["published_at"]).timestamp()),
         }

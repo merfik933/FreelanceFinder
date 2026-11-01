@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
 from enum import Enum
+from db import db
 
 FILTERS_PATH = Path(__file__).parent / "filters.json"
-SKILLS_PATH = Path(__file__).parent / "skills.json"
 
 class FilterMode(str, Enum):
     ALL = "all"
@@ -33,14 +33,9 @@ class FilterManager:
             json.dump(self.filters, f, ensure_ascii=False, indent=4)
 
     def _load_skills(self):
-        if SKILLS_PATH.exists():
-            with open(SKILLS_PATH, "r", encoding="utf-8") as f:
-                skills = json.load(f)
-        else:
-            print("Skills file not found. Creating empty skills list.")
-            skills = {}
-
-        return skills
+        return {skill["id"]: skill["name"] for skill in sorted(
+            db.get_records("skills"), key=lambda skill: skill["name"]
+        )}
 
     def get_filter_mode(self):
         return self.filters["mode"]
@@ -66,7 +61,8 @@ class FilterManager:
             self._save_filters()
 
     def is_project_allowed(self, project: dict) -> bool:
-        project_skill_ids = {s["id"] for s in project.get("skills", [])}
+        project_skill_ids = {skill["id"] for skill in project["skills"]}
+
         selected_skills = set(self.filters["skills"])
         mode = FilterMode(self.filters["mode"])
 

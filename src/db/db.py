@@ -42,17 +42,61 @@ def _insert_record(connection, current_table, current_data):
         query = f"INSERT INTO {relation_table} VALUES (?, ?)"
         connection.executemany(query, ((record_id, value) for value in values))
 
+    return record_id
+
 def add_record(table, data):
     with connect() as connection:
-        _insert_record(connection, table, data)
+        return _insert_record(connection, table, data)
 
 def add_records(table, records):
     if not records:
-        return
+        return []
 
     with connect() as connection:
-        for record in records:
-            _insert_record(connection, table, record)
+        return [_insert_record(connection, table, record) for record in records]
+
+def get_record(table, record_id=None, **filters):
+    conditions = []
+    parameters = []
+
+    if record_id is not None and record_id >= 0:
+        conditions.append("id = ?")
+        parameters.append(record_id)
+
+    conditions.extend(f"{column} = ?" for column in filters)
+    parameters.extend(filters.values())
+
+    query = f"SELECT * FROM {table}"
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+
+    if record_id is not None and record_id < 0:
+        query += " ORDER BY id DESC LIMIT 1 OFFSET ?"
+        parameters.append(-record_id - 1)
+    else:
+        query += " ORDER BY id ASC LIMIT 1"
+
+    with connect() as connection:
+        record = connection.execute(query, parameters).fetchone()
+        return dict(record) if record is not None else None
+
+def get_records(table, **filters):
+    conditions = []
+    parameters = []
+
+    conditions.extend(f"{column} = ?" for column in filters)
+    parameters.extend(filters.values())
+
+    query = f"SELECT * FROM {table}"
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+
+    with connect() as connection:
+        return [dict(record) for record in connection.execute(query, parameters).fetchall()]
+
+def clear_table(table):
+    with connect() as connection:
+        connection.execute(f"DELETE FROM {table}")
 
 def delete_record(table, record_id):
     query = f"DELETE FROM {table} WHERE id = ?"
