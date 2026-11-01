@@ -44,7 +44,7 @@ class TelegramBot:
             if not user or user.get("role") != "admin":
                 return
 
-            filter_settings_markup = self.get_filter_settings_markup()
+            filter_settings_markup = self.get_filter_settings_markup(message.from_user.id)
             self.bot.send_message(
                 message.chat.id,
                 "Налаштування фільтрів",
@@ -61,14 +61,14 @@ class TelegramBot:
                 file.write(f"{call.message.text or ''}\n{'-' * 40}\n")
             self.bot.answer_callback_query(call.id, "Проєкт збережено")
 
-        @self.bot.callback_query_handler(func=lambda call: call.data == "toggle_mode")
-        def toggle_mode_handler(call):
-            self.filter_manager.toggle_filter_mode()
-            self.bot.answer_callback_query(call.id, "Режим змінено")
+        @self.bot.callback_query_handler(func=lambda call: call.data == "toggle_filter")
+        def toggle_filter_handler(call):
+            self.filter_manager.toggle_enabled(call.from_user.id)
+            self.bot.answer_callback_query(call.id, "Фільтр змінено")
             self.bot.edit_message_reply_markup(
                 chat_id=call.message.chat.id,
                 message_id=call.message.message_id,
-                reply_markup=self.get_filter_settings_markup()
+                reply_markup=self.get_filter_settings_markup(call.from_user.id)
             )
 
         @self.bot.callback_query_handler(func=lambda call: call.data.startswith("edit_skills"))
@@ -79,7 +79,7 @@ class TelegramBot:
             start = page * skills_per_page
             end = start + skills_per_page
             page_skills = skills[start:end]
-            selected_skills = self.filter_manager.get_selected_skills()
+            selected_skills = self.filter_manager.get_selected_skills(call.from_user.id)
 
             markup = telebot.types.InlineKeyboardMarkup(row_width=2)
 
@@ -116,17 +116,13 @@ class TelegramBot:
         def toggle_skill_handler(call):
             skill_id_str = call.data.split(":")[2]
             skill_id = int(skill_id_str)
-            if skill_id in self.filter_manager.get_selected_skills():
-                self.filter_manager.remove_skill(skill_id)
-            else:
-                self.filter_manager.add_skill(skill_id)
+            self.filter_manager.toggle_skill(call.from_user.id, skill_id)
             self.bot.answer_callback_query(call.id, "Змінено")
             edit_skills_handler(call)
 
         @self.bot.callback_query_handler(func=lambda call: call.data.startswith("reset_skills"))
         def reset_skills_handler(call):
-            self.filter_manager.filters["skills"] = []
-            self.filter_manager._save_filters()
+            self.filter_manager.reset_skills(call.from_user.id)
             self.bot.answer_callback_query(call.id, "Скинуто")
             edit_skills_handler(call)
 
@@ -144,13 +140,13 @@ class TelegramBot:
             key=lambda skill: skill["name"],
         )
 
-        if self.filter_manager.is_project_allowed(project) == False:
-            return
-
-        message = self.format_project_message(project)
         user = db.get_record("users", role="admin")
         if not user:
             return
+        if not self.filter_manager.is_project_allowed(project, user["telegram_id"]):
+            return
+
+        message = self.format_project_message(project)
 
         try:
             self.bot.send_message(
@@ -201,16 +197,12 @@ class TelegramBot:
         )
         return markup
 
-    def get_filter_settings_markup(self):
-        mode = self.filter_manager.get_filter_mode()
-        mode_text = {
-            "all": "Усі проєкти",
-            "whitelist": "Лише вибрані",
-            "blacklist": "Усі, крім вибраних",
-        }.get(mode, mode)
+    def get_filter_settings_markup(self, user_id):
+        enabled = self.filter_manager.get_filters(user_id)["enabled"]
+        action = "Вимкнути" if enabled else "Увімкнути"
 
         markup = telebot.types.InlineKeyboardMarkup()
-        markup.add(telebot.types.InlineKeyboardButton(f"🔄 Режим: {mode_text}", callback_data="toggle_mode"))
+        markup.add(telebot.types.InlineKeyboardButton(f"🔄 {action} фільтр", callback_data="toggle_filter"))
         markup.add(telebot.types.InlineKeyboardButton("🛠️ Обрати скіли", callback_data="edit_skills:0"))
         markup.add(telebot.types.InlineKeyboardButton("❌ Вийти", callback_data="delete_message"))
 
