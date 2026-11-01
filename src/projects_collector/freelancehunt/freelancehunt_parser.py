@@ -1,8 +1,7 @@
 import requests
 
 from ..base_parser import BaseParser
-from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
+from datetime import datetime
 import time
 
 from db import db
@@ -21,13 +20,6 @@ class FreelanceHuntParser(BaseParser):
     def fetch_new_projects(self) -> list[dict]:
         last_project = db.get_record("projects", -1, source="freelancehunt")
         last_project_id = last_project["external_id"] if last_project else 0
-        now = datetime.now(timezone.utc)
-        cutoff = (
-            now - timedelta(days=3) if last_project_id else
-            now.astimezone(ZoneInfo("Europe/Warsaw")).replace(
-                hour=0, minute=0, second=0, microsecond=0
-            )
-        )
 
         url = self.url
         new_projects = {}
@@ -37,12 +29,13 @@ class FreelanceHuntParser(BaseParser):
             response.raise_for_status()
             payload = response.json()
             projects = payload.get("data", [])
+            if not last_project_id:
+                return [self._format_project(projects[0])] if projects else []
             page += 1
             reached_boundary = False
             for project in projects:
                 project_id = int(project["id"])
-                published = datetime.fromisoformat(project["attributes"]["published_at"])
-                if project_id <= last_project_id or published < cutoff:
+                if project_id <= last_project_id:
                     reached_boundary = True
                     continue
                 new_projects[project_id] = project
