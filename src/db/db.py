@@ -74,7 +74,7 @@ def get_record(table, record_id=None, **filters):
         query += " ORDER BY id DESC LIMIT 1 OFFSET ?"
         parameters.append(-record_id - 1)
     else:
-        query += " ORDER BY id ASC LIMIT 1"
+        query += " LIMIT 1"
 
     with connect() as connection:
         record = connection.execute(query, parameters).fetchone()

@@ -8,10 +8,10 @@ from db import db
 from .projects_filters.filter_manager import FilterManager
 
 class TelegramBot:
-    def __init__(self, token, admin_id):
+    def __init__(self, token, admin_password):
         self.bot = telebot.TeleBot(token)
         self.token = token
-        self.admin_id = admin_id
+        self.admin_password = admin_password
 
         self.MAX_MESSAGE_LENGTH = 4096
         self.MAX_DESCRIPTION_LENGTH = 2048
@@ -25,14 +25,25 @@ class TelegramBot:
         def start(message):
             self.bot.send_message(message.chat.id, "Welcome to the bot!")
 
+        @self.bot.message_handler(commands=['admin'])
+        def admin(message):
+            if message.text == f"/admin {self.admin_password}":
+                db.add_record("users", {"telegram_id": message.from_user.id,
+                                        "username": message.from_user.username, "role": "admin"})
+                self.bot.send_message(message.chat.id, "You are an admin.")
+            else:
+                self.bot.send_message(message.chat.id, "Invalid password.")
+
         @self.bot.message_handler(commands=['id'])
         def send_id(message):
             self.bot.send_message(message.chat.id, f"Your ID: {message.chat.id}")
 
         @self.bot.message_handler(commands=['filters'])
         def filters_command(message):
-            if message.chat.id != self.admin_id:
+            user = db.get_record("users", telegram_id=message.from_user.id)
+            if not user or user.get("role") != "admin":
                 return
+
             filter_settings_markup = self.get_filter_settings_markup()
             self.bot.send_message(
                 message.chat.id,
@@ -137,9 +148,13 @@ class TelegramBot:
             return
 
         message = self.format_project_message(project)
+        user = db.get_record("users", role="admin")
+        if not user:
+            return
+
         try:
             self.bot.send_message(
-                self.admin_id,
+                user["telegram_id"],
                 message,
                 parse_mode='HTML',
                 disable_web_page_preview=True,
