@@ -10,23 +10,71 @@
     },
     "advertising": {
         "name" : "Реклама",
-        "source_skill_ids": [],
+        "source_skill_ids": [127, 133, 131],
         "phrase_codes": [
-            "Гугл аналітика"
-        ]
-    },
-    "telegram_bots": {
-        "name" : "Телеграм боти",
-        "source_skill_ids": [],
-        "phrase_codes": [
-            "Telegram"
+            "Гугл аналітика",
+            "продвижен"
         ]
     },
     "seo": {
         "name" : "SEO",
+        "source_skill_ids": [14],
+        "phrase_codes": [
+        ]
+    },
+    "game_dev": {
+        "name" : "Розробка ігор",
+        "source_skill_ids": [88],
+        "phrase_codes": [
+        ]
+    },
+    "web_dev": {
+        "name" : "Веб-програмування",
+        "source_skill_ids": [96, 99],
+        "phrase_codes": [
+        ]
+    },
+    "simple_tasks": {
+        "name" : "Прості завдання",
         "source_skill_ids": [],
         "phrase_codes": [
-            "крауд"
+            "за зразком"
+        ]
+    },
+    "video": {
+        "name" : "Відео",
+        "source_skill_ids": [101, 113],
+        "phrase_codes": [
+        ]
+    },
+    "audio": {
+        "name" : "Аудіо",
+        "source_skill_ids": [113],
+        "phrase_codes": [
+        ]
+    },
+    "presentation": {
+        "name" : "Презентації",
+        "source_skill_ids": [114],
+        "phrase_codes": [
+        ]
+    },
+    "writing": {
+        "name" : "Написання текстів",
+        "source_skill_ids": [38],
+        "phrase_codes": [
+        ]
+    },
+    "consultations": {
+        "name" : "Консультації",
+        "source_skill_ids": [190],
+        "phrase_codes": [
+        ]
+    },
+    "subject_design": {
+        "name" : "Предметне проєктування",
+        "source_skill_ids": [64],
+        "phrase_codes": [
         ]
     }
 }
