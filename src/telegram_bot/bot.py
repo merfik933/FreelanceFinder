@@ -5,7 +5,7 @@ import time
 
 from db import db
 
-from .projects_filters.filter_manager import FilterManager
+from .projects_filters import filter_manager
 
 class TelegramBot:
     def __init__(self, token, admin_password):
@@ -15,8 +15,6 @@ class TelegramBot:
 
         self.MAX_MESSAGE_LENGTH = 4096
         self.MAX_DESCRIPTION_LENGTH = 2048
-
-        self.filter_manager = FilterManager()
 
         self._register_handlers()
 
@@ -57,7 +55,7 @@ class TelegramBot:
 
         @self.bot.callback_query_handler(func=lambda call: call.data == "toggle_filter")
         def toggle_filter_handler(call):
-            self.filter_manager.toggle_enabled(call.from_user.id)
+            filter_manager.toggle_enabled(call.from_user.id)
             self.bot.answer_callback_query(call.id, "Фільтр змінено")
             self.bot.edit_message_reply_markup(
                 chat_id=call.message.chat.id,
@@ -68,12 +66,12 @@ class TelegramBot:
         @self.bot.callback_query_handler(func=lambda call: call.data.startswith("edit_skills"))
         def edit_skills_handler(call):
             page = int(call.data.split(":")[1])
-            skills = list(self.filter_manager.skills.items())
+            skills = list(filter_manager.get_skills().items())
             skills_per_page = 10
             start = page * skills_per_page
             end = start + skills_per_page
             page_skills = skills[start:end]
-            selected_skills = self.filter_manager.get_selected_skills(call.from_user.id)
+            selected_skills = filter_manager.get_selected_skills(call.from_user.id)
 
             markup = telebot.types.InlineKeyboardMarkup(row_width=2)
 
@@ -110,13 +108,13 @@ class TelegramBot:
         def toggle_skill_handler(call):
             skill_id_str = call.data.split(":")[2]
             skill_id = int(skill_id_str)
-            self.filter_manager.toggle_skill(call.from_user.id, skill_id)
+            filter_manager.toggle_skill(call.from_user.id, skill_id)
             self.bot.answer_callback_query(call.id, "Змінено")
             edit_skills_handler(call)
 
         @self.bot.callback_query_handler(func=lambda call: call.data.startswith("reset_skills"))
         def reset_skills_handler(call):
-            self.filter_manager.reset_skills(call.from_user.id)
+            filter_manager.reset_skills(call.from_user.id)
             self.bot.answer_callback_query(call.id, "Скинуто")
             edit_skills_handler(call)
 
@@ -137,7 +135,7 @@ class TelegramBot:
         user = db.get_record("users", role="admin")
         if not user:
             return
-        if not self.filter_manager.is_project_allowed(project, user["telegram_id"]):
+        if not filter_manager.is_project_allowed(project, user["telegram_id"]):
             return
 
         message = self.format_project_message(project)
@@ -181,7 +179,7 @@ class TelegramBot:
         return message
 
     def get_filter_settings_markup(self, user_id):
-        enabled = self.filter_manager.get_filters(user_id)["enabled"]
+        enabled = filter_manager.get_filters(user_id)["enabled"]
         action = "Вимкнути" if enabled else "Увімкнути"
 
         markup = telebot.types.InlineKeyboardMarkup()
