@@ -6,7 +6,7 @@ import time
 from db import db
 
 from .projects_filters import filter_manager
-from .projects_tagging.tag_manager import get_project_tag
+from .projects_tagging.tag_manager import get_project_tags
 
 class TelegramBot:
     def __init__(self, token, admin_password):
@@ -64,37 +64,37 @@ class TelegramBot:
                 reply_markup=self.get_filter_settings_markup(call.from_user.id)
             )
 
-        @self.bot.callback_query_handler(func=lambda call: call.data.startswith("edit_source_categories"))
-        def edit_source_categories_handler(call):
+        @self.bot.callback_query_handler(func=lambda call: call.data.startswith("edit_categories"))
+        def edit_categories_handler(call):
             page = int(call.data.split(":")[1])
-            source_categories = list(filter_manager.get_source_categories().items())
-            source_categories_per_page = 10
-            start = page * source_categories_per_page
-            end = start + source_categories_per_page
-            page_source_categories = source_categories[start:end]
-            selected_source_categories = filter_manager.get_selected_source_categories(call.from_user.id)
+            categories = list(filter_manager.get_categories().items())
+            categories_per_page = 10
+            start = page * categories_per_page
+            end = start + categories_per_page
+            page_categories = categories[start:end]
+            selected_categories = filter_manager.get_selected_categories(call.from_user.id)
 
             markup = telebot.types.InlineKeyboardMarkup(row_width=2)
 
             buttons = []
-            for source_category_id, name in page_source_categories:
-                is_selected = int(source_category_id) in selected_source_categories
+            for category_id, name in page_categories:
+                is_selected = int(category_id) in selected_categories
                 btn_text = f"✅ {name}" if is_selected else name
                 buttons.append(telebot.types.InlineKeyboardButton(
-                    btn_text, callback_data=f"toggle_source_category:{page}:{source_category_id}"
+                    btn_text, callback_data=f"toggle_category:{page}:{category_id}"
                 ))
             for i in range(0, len(buttons), 2):
                 markup.add(*buttons[i:i+2])
 
             nav_buttons = []
             if start > 0:
-                nav_buttons.append(telebot.types.InlineKeyboardButton("⬅️", callback_data=f"edit_source_categories:{page-1}"))
-            if end < len(source_categories):
-                nav_buttons.append(telebot.types.InlineKeyboardButton("➡️", callback_data=f"edit_source_categories:{page+1}"))
+                nav_buttons.append(telebot.types.InlineKeyboardButton("⬅️", callback_data=f"edit_categories:{page-1}"))
+            if end < len(categories):
+                nav_buttons.append(telebot.types.InlineKeyboardButton("➡️", callback_data=f"edit_categories:{page+1}"))
             if nav_buttons:
                 markup.row(*nav_buttons)
 
-            markup.add(telebot.types.InlineKeyboardButton("🔄 Скинути", callback_data=f"reset_source_categories:{page}"))
+            markup.add(telebot.types.InlineKeyboardButton("🔄 Скинути", callback_data=f"reset_categories:{page}"))
             markup.add(telebot.types.InlineKeyboardButton("❌ Вийти", callback_data="delete_message"))
 
             self.bot.edit_message_text(
@@ -105,32 +105,32 @@ class TelegramBot:
                 parse_mode="HTML"
             )
 
-        @self.bot.callback_query_handler(func=lambda call: call.data.startswith("toggle_source_category"))
-        def toggle_source_category_handler(call):
-            source_category_id_str = call.data.split(":")[2]
-            source_category_id = int(source_category_id_str)
-            filter_manager.toggle_source_category(call.from_user.id, source_category_id)
+        @self.bot.callback_query_handler(func=lambda call: call.data.startswith("toggle_category"))
+        def toggle_category_handler(call):
+            category_id_str = call.data.split(":")[2]
+            category_id = int(category_id_str)
+            filter_manager.toggle_category(call.from_user.id, category_id)
             self.bot.answer_callback_query(call.id, "Змінено")
-            edit_source_categories_handler(call)
+            edit_categories_handler(call)
 
-        @self.bot.callback_query_handler(func=lambda call: call.data.startswith("reset_source_categories"))
-        def reset_source_categories_handler(call):
-            filter_manager.reset_source_categories(call.from_user.id)
+        @self.bot.callback_query_handler(func=lambda call: call.data.startswith("reset_categories"))
+        def reset_categories_handler(call):
+            filter_manager.reset_categories(call.from_user.id)
             self.bot.answer_callback_query(call.id, "Скинуто")
-            edit_source_categories_handler(call)
+            edit_categories_handler(call)
 
     def send_projects(self, project_id):
         project = db.get_record("projects", project_id)
         if project is None:
             raise ValueError(f"Project {project_id} not found in database")
 
-        source_category_ids = {
-            relation["source_category_id"]
-            for relation in db.get_records("project_source_categories", project_id=project_id)
+        category_ids = {
+            relation["category_id"]
+            for relation in db.get_records("project_categories", project_id=project_id)
         }
-        project["source_categories"] = sorted(
-            (source_category for source_category in db.get_records("source_categories") if source_category["id"] in source_category_ids),
-            key=lambda source_category: source_category["name"],
+        project["categories"] = sorted(
+            (category for category in db.get_records("categories") if category["id"] in category_ids),
+            key=lambda category: category["name"],
         )
 
         user = db.get_record("users", role="admin")
@@ -155,10 +155,10 @@ class TelegramBot:
 
     def format_project_message(self, project: dict) -> str:
         name = f"<b>{project['name']}</b>"
-        source_categories_list = [source_category.get('name', '') for source_category in project.get('source_categories', [])]
-        source_categories = f"\n🛠️: {', '.join(source_categories_list)}" if source_categories_list else ""
-        tag = get_project_tag(project)
-        tags = f"\n🏷️: {tag}" if tag else ""
+        categories_list = [category.get('name', '') for category in project.get('categories', [])]
+        categories = f"\n🛠️: {', '.join(categories_list)}" if categories_list else ""
+        project_tags = get_project_tags(project)
+        tags = f"\n🏷️: {', '.join(project_tags)}" if project_tags else ""
         budget = ""
         if project.get('budget_amount') is not None:
             budget = f"\n💰 {project['budget_amount']} {project.get('budget_currency') or ''}"
@@ -174,7 +174,7 @@ class TelegramBot:
             published = f"\n\n🕒 {published_at}"
         url = f"\n🔗{project['url']}"
 
-        message = f"{name}{source_categories}{tags}{budget}{description}{published}{url}"
+        message = f"{name}{categories}{tags}{budget}{description}{published}{url}"
 
         if len(message) > self.MAX_MESSAGE_LENGTH:
             message = message[:self.MAX_MESSAGE_LENGTH] + "…"
@@ -187,7 +187,7 @@ class TelegramBot:
 
         markup = telebot.types.InlineKeyboardMarkup()
         markup.add(telebot.types.InlineKeyboardButton(f"🔄 {action} фільтр", callback_data="toggle_filter"))
-        markup.add(telebot.types.InlineKeyboardButton("🛠️ Обрати категорії", callback_data="edit_source_categories:0"))
+        markup.add(telebot.types.InlineKeyboardButton("🛠️ Обрати категорії", callback_data="edit_categories:0"))
         markup.add(telebot.types.InlineKeyboardButton("❌ Вийти", callback_data="delete_message"))
 
         return markup
