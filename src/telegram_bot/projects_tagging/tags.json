@@ -4,15 +4,29 @@
         "source_skill_ids": [],
         "phrase_codes": [
             "дизайн",
-            "ux/ui"
+            "ux/ui",
+            "ретуш"
         ]
     },
     "advertising": {
         "name" : "Реклама",
         "source_skill_ids": [],
         "phrase_codes": [
-            "реклама",
-            "маркетинг"
+            "Гугл аналітика"
+        ]
+    },
+    "telegram_bots": {
+        "name" : "Телеграм боти",
+        "source_skill_ids": [],
+        "phrase_codes": [
+            "Telegram"
+        ]
+    },
+    "seo": {
+        "name" : "SEO",
+        "source_skill_ids": [],
+        "phrase_codes": [
+            "крауд"
         ]
     }
 }
