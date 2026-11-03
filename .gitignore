@@ -27,3 +27,6 @@ saved_projects
 
 # config
 config.ini
+
+# Auxiliary scripts
+/scripts
