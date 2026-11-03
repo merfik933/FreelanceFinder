@@ -9,7 +9,10 @@ with open(tags_file_path, encoding="utf-8") as file:
     TAGS = json.load(file)
 
 def get_project_tag(project):
-    text = (project.get("name") or "").casefold()
+    text = " ".join(
+        (project.get(field) or "")
+        for field in ("name", "description")
+    ).casefold()
     for tag in TAGS.values():
         if any(phrase.casefold() in text for phrase in tag["phrase_codes"] if phrase.strip()):
             return tag["name"]

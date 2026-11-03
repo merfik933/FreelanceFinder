@@ -49,12 +49,19 @@ class FreelanceHuntParser(BaseParser):
         
     def _format_project(self, project: dict) -> dict:
         attrs = project["attributes"]
+        category_ids = []
+        for external_category in attrs.get("skills", []):
+            category_external_id = int(external_category["id"])
+            category_record = db.get_record("source_categories", source="freelancehunt", external_id=category_external_id)
+            if category_record is not None:
+                category_ids.append(category_record["id"])
+
         return {
             "external_id": project["id"],
             "name": attrs["name"],
             "description": attrs["description"],
             "url": project["links"]["self"]["web"],
-            "project_skills": [skill["id"] for skill in attrs.get("skills", [])],
+            "project_source_categories": list(dict.fromkeys(category_ids)),
             "budget_amount": attrs.get("budget")["amount"] if attrs.get("budget") else None,
             "budget_currency": attrs.get("budget")["currency"] if attrs.get("budget") else None,
             "source": "freelancehunt",

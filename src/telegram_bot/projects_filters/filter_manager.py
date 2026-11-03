@@ -3,9 +3,9 @@ import json
 from db import db
 
 
-def get_skills():
-    return {skill["id"]: skill["name"] for skill in sorted(
-        db.get_records("skills"), key=lambda skill: skill["name"]
+def get_source_categories():
+    return {source_category["id"]: source_category["name"] for source_category in sorted(
+        db.get_records("source_categories"), key=lambda source_category: source_category["name"]
     )}
 
 def _ensure_filters(connection, user_id):
@@ -18,10 +18,10 @@ def get_filters(user_id):
     with db.connect() as connection:
         _ensure_filters(connection, user_id)
         row = connection.execute(
-            "SELECT enabled, skills FROM user_filters WHERE user_id = ?",
+            "SELECT enabled, source_categories FROM user_filters WHERE user_id = ?",
             (user_id,),
         ).fetchone()
-        return {"enabled": bool(row["enabled"]), "skills": json.loads(row["skills"])}
+        return {"enabled": bool(row["enabled"]), "source_categories": json.loads(row["source_categories"])}
 
 def toggle_enabled(user_id):
     with db.connect() as connection:
@@ -31,37 +31,37 @@ def toggle_enabled(user_id):
             (user_id,),
         )
 
-def get_selected_skills(user_id):
-    return get_filters(user_id)["skills"]
+def get_selected_source_categories(user_id):
+    return get_filters(user_id)["source_categories"]
 
-def toggle_skill(user_id, skill_id):
+def toggle_source_category(user_id, source_category_id):
     with db.connect() as connection:
         _ensure_filters(connection, user_id)
         row = connection.execute(
-            "SELECT skills FROM user_filters WHERE user_id = ?", (user_id,)
+            "SELECT source_categories FROM user_filters WHERE user_id = ?", (user_id,)
         ).fetchone()
-        skills = json.loads(row["skills"])
-        if skill_id in skills:
-            skills.remove(skill_id)
+        source_categories = json.loads(row["source_categories"])
+        if source_category_id in source_categories:
+            source_categories.remove(source_category_id)
         else:
-            if db.get_record("skills", skill_id) is None:
-                raise ValueError(f"Unknown skill {skill_id}")
-            skills.append(skill_id)
+            if db.get_record("source_categories", source_category_id) is None:
+                raise ValueError(f"Unknown source category {source_category_id}")
+            source_categories.append(source_category_id)
         connection.execute(
-            "UPDATE user_filters SET skills = ? WHERE user_id = ?",
-            (json.dumps(skills), user_id),
+            "UPDATE user_filters SET source_categories = ? WHERE user_id = ?",
+            (json.dumps(source_categories), user_id),
         )
 
-def reset_skills(user_id):
+def reset_source_categories(user_id):
     with db.connect() as connection:
         _ensure_filters(connection, user_id)
         connection.execute(
-            "UPDATE user_filters SET skills = '[]' WHERE user_id = ?", (user_id,)
+            "UPDATE user_filters SET source_categories = '[]' WHERE user_id = ?", (user_id,)
         )
 
 def is_project_allowed(project, user_id):
     filters = get_filters(user_id)
     if not filters["enabled"]:
         return True
-    project_skill_ids = {skill["id"] for skill in project["skills"]}
-    return bool(project_skill_ids & set(filters["skills"]))
+    project_source_category_ids = {source_category["id"] for source_category in project["source_categories"]}
+    return bool(project_source_category_ids & set(filters["source_categories"]))
