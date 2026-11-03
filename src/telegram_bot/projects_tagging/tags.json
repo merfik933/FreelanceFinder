@@ -1,0 +1,18 @@
+{
+    "design": {
+        "name" : "Дизайн",
+        "source_skill_ids": [],
+        "phrase_codes": [
+            "дизайн",
+            "ux/ui"
+        ]
+    },
+    "advertising": {
+        "name" : "Реклама",
+        "source_skill_ids": [],
+        "phrase_codes": [
+            "реклама",
+            "маркетинг"
+        ]
+    }
+}

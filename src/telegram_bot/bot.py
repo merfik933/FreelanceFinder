@@ -6,6 +6,7 @@ import time
 from db import db
 
 from .projects_filters import filter_manager
+from .projects_tagging.tag_manager import get_project_tag
 
 class TelegramBot:
     def __init__(self, token, admin_password):
@@ -156,6 +157,8 @@ class TelegramBot:
         name = f"<b>{project['name']}</b>"
         skills_list = [skill.get('name', '') for skill in project.get('skills', [])]
         skills = f"\n🛠️: {', '.join(skills_list)}" if skills_list else ""
+        tag = get_project_tag(project)
+        tags = f"\n🏷️: {tag}" if tag else ""
         budget = ""
         if project.get('budget_amount') is not None:
             budget = f"\n💰 {project['budget_amount']} {project.get('budget_currency') or ''}"
@@ -171,7 +174,7 @@ class TelegramBot:
             published = f"\n\n🕒 {published_at}"
         url = f"\n🔗{project['url']}"
 
-        message = f"{name}{skills}{budget}{description}{published}{url}"
+        message = f"{name}{skills}{tags}{budget}{description}{published}{url}"
 
         if len(message) > self.MAX_MESSAGE_LENGTH:
             message = message[:self.MAX_MESSAGE_LENGTH] + "…"
